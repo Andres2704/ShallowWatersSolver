@@ -45,13 +45,6 @@ class sw_multilayer():
                     self.W[1:, k] = ur*hr
                     #self.W[1:self.N_layers+1, k] = 0.0
 
-        # Exact solution
-        if self.sol_type == 'bump':
-            self.W_exact = self.exact.call_solution(self.x[0], self.tf, self.N+1)
-        else:
-            for k in range(self.N+1):
-                self.W_exact[:, k] = self.exact.call_solution(self.x[k], self.tf, self.N+1)
-     
     def boundary(self, Wl, Wr, type): 
         # Boudary condition
         if type == 1: # Free surface
@@ -83,7 +76,11 @@ class sw_multilayer():
         return dt 
     
     def propagate(self):     
-        print('- Running simulation for multilayer shallow water:')
+        print('===== Running simulation for multilayer shallow water =====')
+        print('  ---> Number of layers   : ', self.N_layers)
+        print('  ---> Number of x points : ', self.N)
+        print('  ---> Stability condition: ', self.CFL)
+        print('  ---> Simulation time    : ', self.tf)
         start_time = time.time()
         while (self.t <= self.tf):
             # =========================================================================
@@ -173,51 +170,31 @@ class sw_multilayer():
                        
                     # Decentered explicit scheme 
                     self.W[i+1, k] = self.hu_star[i, k] + self.dt*(u_ip1*G_p12_p + u_i*G_p12_m - u_i*G_m12_p - u_im1*G_m12_m)/self.li[i]
-                    #print(self.W[0, k], self.hu_star[i, k])
 
             self.t  = self.t + self.dt 
 
         print('Simulation ended, time to solve it: ', time.time() - start_time,'s')
 
-    def output(self, plot = True, sol_exact = False, save = False):
-        if save:
-            np.savetxt('output_sw_class_multilayer_shear.out', (self.x, self.W[0,:], self.W[1, :]))  
-        
-        if plot:
-            plt.rcParams["font.family"] = "serif"
-            fig, axs = plt.subplots(2, 1)
-            bilayer = np.loadtxt('output_sw_2layer.out')
-            monolayer = np.loadtxt('output_sw_class_monolayer.out')
+    def output(self, plot = True, save = False, save_name = 'output_multilayer'):
+        plt.rcParams["font.family"] = "serif"
+        fig, axs = plt.subplots(2, 1)
 
-            #axs[0].plot(self.x, monolayer[1,:], color = 'b', label = 'One layer approach', marker = 'x', markevery = 50)
-            axs[0].plot(self.x, self.W[0,:], color = 'r', label = 'Multilayer approach', marker = 'v', markevery = 40)
-            axs[0].plot(bilayer[0, :], bilayer[1,:], color = 'k', label = 'Two layers approach', marker = 'o', markevery = 55)
-            axs[0].set_ylabel('h [m]')
-            axs[0].grid(which='both')
-            axs[0].legend()
-
-            axs[1].plot(self.x, self.W[1,:]/self.W[0,:], color = 'r', label = r'$u_1$', marker = 'x', markevery = 50)
-            axs[1].plot(bilayer[0, :], bilayer[2,:], color = 'k', label = r'$u_1$ Two layers', marker = 'o', markevery = 55)
-            axs[1].plot(bilayer[0, :], bilayer[3,:], color = 'm', label = r'$u_2$ Two layers', marker = 's', markevery = 55)
-            axs[1].plot(self.x, self.W[2,:]/self.W[0,:], color = 'b', label = r'$u_2$', marker = 'v', markevery = 40)
-            #axs[1].plot(self.x, self.W[3,:]/self.W[0,:], label = r'$u_3$', marker = 's', markevery = 40)
-            #axs[1].plot(self.x, self.W[4,:]/self.W[0,:], color = 'm', label = r'$u_4$', marker = '*', markevery = 40, linestyle = '--')
-            axs[1].set_xlabel('x [m]')
-            axs[1].set_ylabel('u [m/s]')
-            axs[1].grid(True)
-            axs[1].legend()
-            plt.savefig('multilayer_result_4layer.eps', format='eps')
-            plt.show()
-            # plt.plot(self.x, self.G[1, :])
+        axs[0].plot(self.x, self.W[0,:], color = 'r', label = 'Multilayer approach', marker = 'v', markevery = 40)
+        axs[0].set_ylabel(r'$h [m]$')
+        axs[0].grid(which='both')
+        axs[0].legend()
+        markers = ['.', ',', 'o', 'v', '^', '<', '>', '1', '2', '3', '4']
+        colors  = ['r', 'b', 'k', 'g', 'c', 'm', 'y', 'orange', 'brown', 'olive', 'gray']
+        for i in range(self.N_layers):
+            axs[1].plot(self.x, self.W[i+1,:]/self.W[0,:], color = colors[i], label = r'$u$_'+str(i), marker = markers[i], markevery = self.N/5)
             
+        axs[1].set_xlabel(r'$x [m]$')
+        axs[1].set_ylabel(r'$u [m/s]$')
+        axs[1].grid(True)
+        axs[1].legend()
+        if save:
+            np.savetxt(save_name + '.out', (self.x, self.W[0,:], self.W[1, :]))  
+            plt.savefig(save_name + '.png', format='png')
 
-            # fig = plt.figure()
-            # plt.plot(self.x, self.G[0, :], color = 'r', label = r'$G_{-1/2}$', marker = 'x', markevery = 50)
-            # plt.plot(self.x, self.G[1, :], color = 'k', label = r'$G_{1/2}$', marker = 'o', markevery = 55)
-            # plt.plot(self.x, self.G[2, :], color = 'b', label = r'$G_{3/2}$', marker = 'v', markevery = 40)
-            # plt.xlabel('x [m]')
-            # plt.ylabel('G [m^2/s^2]')
-            # plt.grid(True)
-            # plt.legend()
-            # plt.show()
+        if plot: plt.show()
  
