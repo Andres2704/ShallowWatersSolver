@@ -148,7 +148,11 @@ class sw_solver():
         return dt 
     
     def propagate(self):     
-        print('- Running simulation for one layer SW equations')
+        print('===== Running simulation for shallow waters equation =====')
+        print('  ---> Number of layers   : ', 1)
+        print('  ---> Number of x points : ', self.N)
+        print('  ---> Stability condition: ', self.CFL)
+        print('  ---> Simulation time    : ', self.tf)
         start_time = time.time()
         well_balanced = True   
         # Propagate the solution 
