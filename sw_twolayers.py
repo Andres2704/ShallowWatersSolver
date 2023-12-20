@@ -5,13 +5,13 @@ from sw_exact import *
 
 class sw_bilayer():
     
-    def __init__(self, Xi, Xf, N, tf, CFL, dt, boundary) -> None:
+    def __init__(self, Xi, Xf, N, tf, CFL, boundary) -> None:
         self.Xi = Xi                                # Initial point in the domain
         self.Xf = Xf                                # Final point in the domain
         self.N  = N                                 # Mesh elements
         self.t  = 0                                 # Time 
         self.tf = tf                                # Final time of simulation
-        self.dt = dt                                # Time step
+        self.dt = 0.01                                # Time step
         self.dx = (Xf-Xi)/N                         # Space step
         self.Ll    = 0 
         self.Lr    = 0
@@ -42,19 +42,12 @@ class sw_bilayer():
                     self.W[0, i] = hr
                     self.W[1, i] = ubar_r*hr 
                     self.W[2, i] = uhat_r 
-        else:
-            self.W[0, :] = 0.5 + np.exp(-30*(self.x - x)**2)/np.sqrt(2*np.pi) + self.B
-            self.W[1, :] = 0.0
       
-        # Exact solution
-        # for k in range(self.N+1):
-            # self.W_exact[:, k] = self.sol_exact(self.x[k], hl, hr, ul, ur, self.tf)
-
-    def boundary(self, W): 
+    def boundary(self, W, boundary): 
         # Boudary condition
-        if self.bnd == 1: # Free surface
+        if boundary == 1: # Free surface
             return np.array([W[0], W[1], W[2]])
-        elif self.bnd == 2: # Symmetry
+        elif boundary == 2: # Wall
             return np.array([W[0], -W[1], -W[2]])
 
     def numerical_flux(self, WL, WR, k):
@@ -82,17 +75,15 @@ class sw_bilayer():
         return dt 
     
     def propagate(self):     
-        print('- Running simulation for 2 layers SW equations')   
-        # Propagate the solution 
+        print('===== Running simulation for two layers shallow water =====')
+        print('  ---> Number of layers   : ', 2)
+        print('  ---> Number of x points : ', self.N)
+        print('  ---> Stability condition: ', self.CFL)
+        print('  ---> Simulation time    : ', self.tf)
         start_time = time.time()
-        iter = 0
+
         while (self.t < self.tf):
             self.dt = self.determine_timestep()
-            # if (iter % 10 == 1):
-            #     u2 = self.W[1,:]/self.W[0,:] + self.W[2,:]
-            #     u1 = u2 - 2*self.W[2,:]
-            #     np.savetxt('bicouche_transitoire/output_2layer_'+ str(iter) + '.out', (self.x, self.W[0,:], u1, u2)) 
-
             V = self.W.copy()
             for k in range(self.N):
                 Vl = V[:, k]
@@ -101,42 +92,30 @@ class sw_bilayer():
                 self.W[:, k]    = self.W[:, k]   - self.dt*F/self.dx 
                 self.W[:, k+1]  = self.W[:, k+1] + self.dt*F/self.dx
 
-            boundary_left = self.boundary(self.W[:,1])
-            self.W[:, 0] = boundary_left  # Left border 
-
-            boundary_right = self.boundary(self.W[:,self.N-1])
-            self.W[:, self.N] = boundary_right # Right border
+            self.W[:, 0] = self.boundary(self.W[:,1], self.bnd[0])  # Left border 
+            self.W[:, self.N] = self.boundary(self.W[:,self.N-1], self.bnd[1]) # Right border
             
             self.t  = self.t + self.dt  
-            iter = iter + 1
+
         print('Simulation ended, time to solve it: ', time.time() - start_time,'s')
    
-    def output(self, plot = True, sol_exact = False, save = True):
-
+    def output(self, plot = True, save = True, save_name = 'output_twolayer'):
         u2 = self.W[1,:]/self.W[0,:] + self.W[2,:]
         u1 = u2 - 2*self.W[2,:]
+        plt.rcParams["font.family"] = "serif"
+        fig, axs = plt.subplots(2, 1) 
+        axs[0].plot(self.x, self.W[0,:], color = 'r', label = 'Bicouche', marker = 'x', markevery = 50)
+        axs[0].set_ylabel('h [m]')
+        axs[0].grid(True)
+
+        axs[1].plot(self.x, u1, color = 'r', label = r'$u_1$', marker = 'x', markevery = 50)
+        axs[1].plot(self.x, u2, color = 'k', label = r'$u_2$', marker = 'v', markevery = 40)
+        axs[1].set_xlabel('x [m]')
+        axs[1].set_ylabel('u [m/s]')
+        axs[1].grid(True)
+        axs[1].legend()
         if save:
-            np.savetxt('output_sw_2layer.out', (self.x, self.W[0,:], u1, u2)) 
-        if plot:
-            plt.rcParams["font.family"] = "serif"
-            fig, axs = plt.subplots(2, 1) 
-            axs[0].plot(self.x, self.W[0,:], color = 'r', label = 'Bicouche', marker = 'x', markevery = 50)
-            axs[0].set_ylabel('h [m]')
-            axs[0].grid(True)
-
-            axs[1].plot(self.x, u1, color = 'r', label = r'$u_1$', marker = 'x', markevery = 50)
-            axs[1].plot(self.x, u2, color = 'k', label = r'$u_2$', marker = 'v', markevery = 40)
-            axs[1].set_xlabel('x [m]')
-            axs[1].set_ylabel('u [m/s]')
-            axs[1].grid(True)
-            axs[1].legend()
-
-            # if os.path.isfile('output_sw_class.out'):
-                # classic = np.loadtxt('output_sw_class.out')
-                # axs[0].plot(classic[0,:], classic[1,:], color = 'k', label = 'Monocouche')
-                # axs[1].plot(classic[0,:], classic[2,:]/classic[1,:], color = 'k')
-            
-            #axs[0].legend()
-            # plt.savefig('bilayer_result_2_1.eps', format='eps')
-            plt.show()
+            np.savetxt(save_name + '.out', (self.x, self.W[0,:], self.W[1, :]))  
+            plt.savefig(save_name + '.png', format='png')
+        if plot: plt.show()
 

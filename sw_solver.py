@@ -172,8 +172,8 @@ class sw_solver():
                     F = self.numerical_flux(Vl, Vr, k)
 
                     # Integration
-                    self.W[:, k]    = self.W[:, k]   - self.dt*(F)/self.dx - self.dt*Sl
-                    self.W[:, k+1]  = self.W[:, k+1] + self.dt*(F)/self.dx + self.dt*Sr
+                    self.W[:, k]    = self.W[:, k]   - self.dt*(F+Sl)/self.dx #- self.dt*Sl
+                    self.W[:, k+1]  = self.W[:, k+1] + self.dt*(F+Sr)/self.dx #+ self.dt*Sr
                 
                 # self.W[:, 0] = np.array([self.W[0, 1], 0.18]).T
                 # self.W[:, self.N] = np.array([0.33, 0.33*self.W[1, self.N-1]/self.W[0, self.N-1]]).T
