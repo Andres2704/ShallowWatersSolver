@@ -1,10 +1,11 @@
 import time
 import os.path
+import numpy as np
 from matplotlib import pyplot as plt 
 from sw_exact import *
 
 class sw_multilayer():
-    def __init__(self, Xi, Xf, N, tf, CFL, li, sol_type) -> None:
+    def __init__(self, Xi, Xf, N, tf, CFL, li) -> None:
         self.Xi = Xi                                # Initial point in the domain
         self.Xf = Xf                                # Final point in the domain
         self.N  = N                                 # Mesh elements
@@ -19,8 +20,6 @@ class sw_multilayer():
         self.N_layers = len(self.li)
         self.x  = np.linspace(Xi, Xf, N+1)          # Discrete domain 
         self.lambd_max  = np.zeros(self.N+1)
-        self.sol_type = sol_type
-        self.exact = exact_solution(sol_type)
             
     def initialise(self, hl, hr, ul, ur, x, type = 'riemann', boundary = 1):
         # Initial conditions
@@ -37,8 +36,6 @@ class sw_multilayer():
         self.G          = np.zeros((self.N_layers+1, self.N+1))
         self.u_n        = np.zeros((self.N_layers+1, self.N+1))
         if type == 'riemann':
-            #ul = np.array([-0.5, 1.0])
-            #ur = np.array([0.5, -1.0])
             for k in range(self.N+1):
                 if self.x[k] <= x:
                     self.W[0, k] = hl

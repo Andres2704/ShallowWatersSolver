@@ -1,30 +1,25 @@
 
 from sw_multilayer import *
 
-# Simulation definition
-xi = 0
-xf = 1 
-N  = 500
-tf = 0.1
-dt = 0.01 
-CFL = 0.5 
+# Simulation definition (Time and space domain)
+xi = 0                      # Initial x-coordinate
+xf = 1                      # Final x-coordinate
+N  = 500                    # Number of points in x 
+tf = 0.1                    # Final time of simulation
+CFL = 0.5                   # Stability condition
 
 # Initial conditions 
-hl = 0.25
-hr = 0.50
-ul = 0.0
-ur = 0.0
-xdiv = 0.5
-init_type = 'riemann'       # 'riemann' | 'wave' | 'bump'
-boundary = [1, 1]           # 1 - Free Border | 2 - Wall | 3 - Imposed
+hl = 0.25                   # Left  layer height 
+hr = 0.50                   # Right layer height
+xdiv = 0.5                  # Point of discontinuity (if does not exist = 0 )
+init_type = 'riemann'       # 'riemann' (Type of initialization)
+boundary = [1, 1]           # 1 - Free Border | 2 - Wall (Type of boundary condition)
+li = np.array([0.5, 0.5])   # Portion of each layer (li*hi)
+ul = np.array([-0.5, 1.0])  # Left layer velocity ([u1l, u2l, ..., uLl]) for L-layers
+ur = np.array([-0.5, 1.0])  # Right layer velocity ([u1r, u2r, ..., uLr]) for L-Layers
 
-
-# Setting the options for a multy layer simulation based on previous inputs
-li = np.array([0.5, 0.5])
-ul = np.array([-0.5, 1.0])
-ur = np.array([-0.5, 1.0])
-
-multilayer = sw_multilayer(xi, xf, N, tf, CFL, li, 'rarefaction')
+# Setting the pipelines
+multilayer = sw_multilayer(xi, xf, N, tf, CFL, li)
 multilayer.initialise(hl, hr, ul, ur, xdiv, init_type, boundary)
 multilayer.propagate()
 multilayer.output(plot = True, sol_exact=False, save = False)
