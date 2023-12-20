@@ -201,30 +201,24 @@ class sw_solver():
 
         print('Simulation ended, time to solve it: ', time.time() - start_time,'s')
 
-    def output(self, plot = True, sol_exact = False, save = False):
-        if save:
-            np.savetxt('output_sw_class_monolayer.out', (self.x, self.W[0,:], self.W[1, :]))  
-        
-        if plot:
-            plt.rcParams["font.family"] = "serif"
-            fig, axs = plt.subplots(2, 1)
-
-            axs[0].plot(self.x, self.W[0,:], color = 'r', label = 'SW-solver')
-            if (sol_exact):
+    def output(self, plot = True, sol_exact = False, save = False, save_name='output_onelayer'):
+        plt.rcParams["font.family"] = "serif"
+        fig, axs = plt.subplots(2, 1) 
+        axs[0].plot(self.x, self.W[0,:], color = 'r', label = 'SW-Solver', marker = 'x', markevery = 50)
+        axs[0].set_ylabel('h [m]')
+        axs[0].grid(True)
+        if (sol_exact):
                 axs[0].plot(self.x, self.W_exact[0, :], color = 'b', label = 'Exact')
-            
-            axs[0].plot(self.x, self.B, color = 'k', label = 'Bathymetry')
-            axs[0].set_ylabel('h [m]')
-            axs[0].grid(which='both')
+                axs[1].plot(self.x, self.W_exact[1, :]/self.W_exact[0, :], color = 'b', label = 'Exact')
 
-            axs[1].plot(self.x, self.W[1,:], color = 'r', label = 'Numerique')
-            if (sol_exact):
-                axs[1].plot(self.x, self.W_exact[1, :], color = 'b', label = 'Exact')
+        axs[1].plot(self.x, self.W[0,:], color = 'r', marker = 'x', markevery = 50)
+        axs[1].set_xlabel('x [m]')
+        axs[1].set_ylabel('u [m/s]')
+        axs[1].grid()
+        
+        if save:
+            np.savetxt(save_name + '.out', (self.x, self.W[0,:], self.W[1, :]))  
+            plt.savefig(save_name + '.png', format='png')
+        if plot: plt.show()
+        
             
-            axs[0].legend()
-            axs[1].set_xlabel('x [m]')
-            axs[1].set_ylabel('u [m/s]')
-            axs[1].grid(which='both')
-
-            # plt.savefig('inutil.eps', format='eps')
-            plt.show()

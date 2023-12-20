@@ -2,21 +2,20 @@
 from sw_solver import *
 
 # Simulation definition
-xi = 0
-xf = 1 
-N  = 500
-tf = 0.1
-dt = 0.01 
-CFL = 0.9 
+xi = 0                      # Initial x-coordinate
+xf = 1                      # Final x-coordinate
+N  = 500                    # Number of points in x 
+tf = 0.1                    # Final time of simulation
+CFL = 0.5                   # Stability condition
 
 # Initial conditions 
-hl = 0.25
-hr = 0.50
-ul = 0.0
-ur = 0.0
-xdiv = 0.5
+hl = 0.25                   # Left  layer height 
+hr = 0.50                   # Right layer height
+ul = 0.0                    # Left  layer velocity
+ur = 0.0                    # Right layer velocity
+xdiv = 0.5                  # Point of discontinuity
 init_type = 'riemann'       # 'riemann' | 'wave' | 'bump'
-boundary = [1, 1]        # 1 - Free Border | 2 - Wall | 3 - Imposed
+boundary = [1, 1]           # 1 - Free Border | 2 - Wall | 3 - Imposed
 
 # Bathymetry parameters
 bath_type = 'none'
